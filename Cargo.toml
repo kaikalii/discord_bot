@@ -7,4 +7,9 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-discord = "*"
+serenity = "*"
+serde = "*"
+serde_derive = "*"
+serde_yaml = "*"
+narwhalol = "*"
+rql = "*"
