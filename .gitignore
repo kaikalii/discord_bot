@@ -2,3 +2,4 @@
 **/*.rs.bk
 database
 tokens.sh
+tokens.ps1
