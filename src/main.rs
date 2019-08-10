@@ -102,13 +102,12 @@ impl EventHandler for Handler {
 }
 
 fn main() {
-    std::env::set_var("RIOT_API_KEY", "RGAPI-af8b654e-8929-4e17-9c8f-ef682fe0bac4");
     let handler = Handler {
         league: LeagueAPI::new(Region::NA),
         db: Database::new("database", Representation::HumanReadable).unwrap(),
     };
     let mut client = Client::new(
-        "NjA5NjE0MTg0Mzg4MzYyMjQy.XU5ddQ.Ia3BAYgGu_tVI5tKEERdEbyqdDE",
+        std::env::var("BOT_TOKEN").expect("You mut set the BOT_TOKEN environment variable"),
         handler,
     )
     .expect("Err creating client");
