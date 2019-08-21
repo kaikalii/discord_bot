@@ -29,10 +29,11 @@ macro_rules! command {
 command! {
     Help => "Display this message",
     Ping => "Ping the bot",
-    Fortune => "Get your fortune told",
+    Advice => "Get your fortune told",
+    Fortune => "Replaced with !advice",
 }
 
-static FORTUNES: &[&str] = &[
+static ADVICE: &[&str] = &[
     "###, you a good person deserving of love ❤",
     "###, every mistake you make is just an opportuniy to learn and better yourself 💪",
     "###, in times of trouble, turn to friends. \
@@ -54,6 +55,32 @@ static FORTUNES: &[&str] = &[
     "###, it can be helpful, from time to time, to allow the \
      diffuculties of life to overcome you. Use this time for catharsis \
      and to build personal resolve.",
+    "###, even if you can get something done with a bad attitude, \
+     wouldn't it be nicer to find a positive outlook on it?",
+    "###, a 1v5 is not winnable, but a 2v5 is. Anything is possible \
+     when you have a friend by your side.",
+    "###, one day the Dark Lord will rise again, and he will rain fire \
+     on the mountains of man and sit on the throne of the Earth.",
+    "###, before making a big decision, you may want to wait an amount \
+     of time proportional to how long that decision will affect your life. \
+     You may find that it is not what you wanted after all.",
+    "###, all problems naturally resolve themselves, although you may be \
+     dead before they do.",
+    "###, Don't keep a bad friend around out of nothing but loyalty. \
+     Someone who consistently makes the same bad decisions that burden \
+     you is not worthy of your friendship, and can be cut off without remorse.",
+    "###, very few things a actually impossible. A great many things are \
+     very improbable. The challenge of the realistic optimist is deciding how \
+     unlikely is too unlikely.",
+    "###, a game that seems lost at 20 minutes could be come back from and \
+     won a 50 minutes. Is it worth it though? You could just surrender at 20 \
+     and use that 30 minutes to play a new game.",
+    "###, whenever you are dismayed at your own lack of initiative, remember \
+     the words of a wise old sage: \"Yesterday you said tomorrow, so JUST DO IT!\"",
+    "###, when you find someone's behavior appalling, it may be useful to use \
+     words to get to the root of why they would do such a thing. Some people are \
+     beyond saving, others are actually reasonable and can be reformed via \
+     conversation.",
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
@@ -115,11 +142,11 @@ impl Handler {
                     Ping => {
                         msg.channel_id.say(&ctx.http, "Pong!")?;
                     }
-                    Fortune => {
+                    Advice => {
                         let user_id = self.user_id(*msg.author.id.as_u64());
                         let mut users = self.db.user_mut();
                         let user = users.get_mut(user_id).unwrap();
-                        let tell_fortune = match user.last_fortune_time {
+                        let tell_advice = match user.last_fortune_time {
                             Some(ref mut last_time) => {
                                 let time_since =
                                     DateTime::<Utc>::from(SystemTime::now()) - *last_time;
@@ -136,40 +163,47 @@ impl Handler {
                                 Ok(())
                             }
                         };
-                        match tell_fortune {
+                        match tell_advice {
                             Ok(()) => {
                                 let name = match msg.author.name.as_str() {
                                     "Kai' Sa" => "Aether",
-                                    "SkrubLyfe" => "Logan",
+                                    "Skrublyfe" => "Logan",
                                     "Most ok Kat NA" => "Trevor",
                                     "cokez11" => "Hamilton",
                                     "Kaikalii" => "Kai",
+                                    "[Mr.Dr.SistrFistr]" => "Kiernan",
                                     s => s,
                                 };
                                 let mut rng = thread_rng();
-                                if user.used_fortunes.len() == FORTUNES.len() {
+                                if user.used_fortunes.len() == ADVICE.len() {
                                     user.used_fortunes.clear();
                                 }
-                                let fortune = loop {
-                                    let index = rng.gen_range(0, FORTUNES.len());
+                                let advice = loop {
+                                    let index = rng.gen_range(0, ADVICE.len());
                                     if !user.used_fortunes.contains(&index) {
                                         user.used_fortunes.insert(index);
-                                        break FORTUNES[index].replace("###", name);
+                                        break ADVICE[index].replace("###", name);
                                     }
                                 };
-                                msg.channel_id.say(&ctx.http, fortune)?;
+                                msg.channel_id.say(&ctx.http, advice)?;
                             }
                             Err(hours) => {
                                 msg.channel_id.say(
                                     &ctx.http,
                                     format!(
-                                        "You have already had your fortune told today. \
+                                        "You have already been given advice today. \
                                          Try again in {} hours",
                                         hours
                                     ),
                                 )?;
                             }
                         }
+                    }
+                    Fortune => {
+                        msg.channel_id.say(
+                            &ctx.http,
+                            "The !fortune command has been replaced with !advice.",
+                        )?;
                     }
                 },
                 Err(_) => {
