@@ -52,9 +52,9 @@ static ADVICE: &[&str] = &[
     "###, it can be helpful to write down the things you don't want \
      to become. It is just as important to have something to run from as \
      it is to have something to run toward.",
-    "###, it can be helpful, from time to time, to allow the \
-     diffuculties of life to overcome you. Use this time for catharsis \
-     and to build personal resolve.",
+    "###, home is not a place. Home is the people with which you spend \
+     you life, the people that you support and those that support you. \
+     You can live almost anywhere as long as you have family or friends.",
     "###, even if you can get something done with a bad attitude, \
      wouldn't it be nicer to find a positive outlook on it?",
     "###, a 1v5 is not winnable, but a 2v5 is. Anything is possible \
@@ -64,8 +64,9 @@ static ADVICE: &[&str] = &[
     "###, before making a big decision, you may want to wait an amount \
      of time proportional to how long that decision will affect your life. \
      You may find that it is not what you wanted after all.",
-    "###, all problems naturally resolve themselves, although you may be \
-     dead before they do.",
+    "###, there are people in the world who have perfect memories and are \
+     unable to forget anything. Make no mistake, this is a terrible curse. \
+     The ability to forget is the ability to move on.",
     "###, Don't keep a bad friend around out of nothing but loyalty. \
      Someone who consistently makes the same bad decisions that burden \
      you is not worthy of your friendship, and can be cut off without remorse.",
@@ -172,16 +173,25 @@ impl Handler {
                                     "cokez11" => "Hamilton",
                                     "Kaikalii" => "Kai",
                                     "[Mr.Dr.SistrFistr]" => "Kiernan",
+                                    "Boosted Bonobo" => "Jimmy",
                                     s => s,
                                 };
                                 let mut rng = thread_rng();
                                 if user.used_fortunes.len() == ADVICE.len() {
                                     user.used_fortunes.clear();
                                 }
+                                let mut user_table = self.db.user_mut();
+                                let mut meta_user = user_table
+                                    .update()
+                                    .find(|user| user.discord_id == 0)
+                                    .expect("No meta user");
                                 let advice = loop {
                                     let index = rng.gen_range(0, ADVICE.len());
-                                    if !user.used_fortunes.contains(&index) {
+                                    if !user.used_fortunes.contains(&index)
+                                        && !meta_user.used_fortunes.contains(&index)
+                                    {
                                         user.used_fortunes.insert(index);
+                                        meta_user.used_fortunes.insert(index);
                                         break ADVICE[index].replace("###", name);
                                     }
                                 };
@@ -224,6 +234,19 @@ impl EventHandler for Handler {
     }
     fn ready(&self, _: Context, ready: Ready) {
         println!("{} is connected!", ready.user.name);
+        if !self.db.user().find(|user| user.discord_id == 0).is_some() {
+            let used_fortunes: HashSet<usize> = self
+                .db
+                .user()
+                .rows()
+                .flat_map(|user| user.used_fortunes.clone())
+                .collect();
+            self.db.user_mut().insert(User {
+                discord_id: 0,
+                used_fortunes,
+                last_fortune_time: None,
+            });
+        }
     }
 }
 
